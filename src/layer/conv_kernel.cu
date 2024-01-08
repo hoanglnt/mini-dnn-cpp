@@ -65,17 +65,17 @@ float stopTimer()
 	return timer.Elapsed();
 }   
 
-__global__ void im2col_kernel(float* image, float* data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
+__global__ void im2col_kernel(float* restrict image, float* restrict data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index >= height_out * width_out) return; // One thread per output element
 
     int h_out = index / width_out; // Determine which output row and column this thread should handle
     int w_out = index % width_out;
 
-    for (int c = 0; c < channel_in; c++) { // For each channel
-        for (int i = 0; i < height_kernel; i++) { // For each row in the kernel
-            for (int j = 0; j < width_kernel; j++) { // For each column in the kernel
-
+    for (int c = 0; c < channel_in; c++) {
+        for (int i = 0; i < height_kernel; i++) {
+            #pragma unroll
+            for (int j = 0; j < width_kernel; j++) {
                 int im_row = h_out * stride - pad_h + i; // Calculate corresponding input row
                 int im_col = w_out * stride - pad_w + j; // Calculate corresponding input column
 
@@ -91,6 +91,7 @@ __global__ void im2col_kernel(float* image, float* data_col, int height_in, int 
         }
     }
 }
+
 
 __global__ void matrix_multiplication_kernel(float* A, float* C, int m, int n, int k) {
     __shared__ float As[TILE_SIZE][TILE_SIZE];
