@@ -4,6 +4,6 @@
 void startTimer();
 float stopTimer();
 
-void deviceConv(int C, int H, int W, int K, float* image, float* data_col);
+void im2col_gpu(int C, int H, int W, int K, float* image, float* data_col);
 
 #endif
