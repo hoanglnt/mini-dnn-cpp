@@ -55,6 +55,8 @@ void Conv::forward(const Matrix& bottom) {
     top.resize(height_out * width_out * channel_out, n_sample);
     data_cols.resize(n_sample);
 
+    copyWeightsToConstant(weight.data(), sizeof(float) * weight.size());
+
     for (int i = 0; i < n_sample; i++) {
         float* image = new float[bottom.rows()]; // Assuming one column of 'bottom' is one image
         Eigen::Map<Vector>(image, bottom.rows()) = bottom.col(i);
@@ -70,7 +72,6 @@ void Conv::forward(const Matrix& bottom) {
         Matrix result(height_out * width_out, channel_out);
         matrix_multiply_gpu(
             data_col_buffer,
-            weight.data(),
             result.data(),
             height_out * width_out,
             height_kernel * width_kernel * channel_in,
