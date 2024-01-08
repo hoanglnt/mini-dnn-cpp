@@ -23,6 +23,7 @@
 #include "src/network.h"
 #include "src/optimizer.h"
 #include "src/optimizer/sgd.h"
+#include "src/layer/conv_kernel.h"
 
 int main()
 {

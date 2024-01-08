@@ -1,4 +1,5 @@
 #include "conv.h"
+#include "conv_kernel.h"
 #include <math.h>
 #include <iostream>
 
@@ -53,10 +54,13 @@ void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
   top.resize(height_out * width_out * channel_out, n_sample);
   data_cols.resize(n_sample);
+  float* dataColData = (float *)malloc(height_kernel * width_kernel * channel_in * height_out * width_out * sizeof(float));
   for (int i = 0; i < n_sample; i ++) {
     // im2col
-    Matrix data_col;
-    im2col(bottom.col(i), data_col);
+    float* imageData = (float *)(bottom.col(i)).transpose().data();
+    unrollGPUWrapper(channel_in, height_in, width_in, height_kernel, imageData, dataColData);
+    Matrix data_col = Eigen::Map<Matrix>(dataColData, height_out * width_out, height_kernel * width_kernel * channel_in);
+
     data_cols[i] = data_col;
     // conv by product
     Matrix result = data_col * weight;  // result: (hw_out, channel_out)
