@@ -61,7 +61,7 @@ float stopTimer()
     timer.Stop();
 
 	return timer.Elapsed();
-}
+}   
 
 __global__ void im2col_kernel(float* image, float* data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
