@@ -51,20 +51,35 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
 }
 
 void Conv::forward(const Matrix& bottom) {
-  int n_sample = bottom.cols();
-  top.resize(height_out * width_out * channel_out, n_sample);
-  data_cols.resize(n_sample);
-  for (int i = 0; i < n_sample; i ++) {
-    // im2col
-    Matrix data_col; // Ensure data_col is initialized to correct size if needed
-    im2col_gpu(bottom.col(i), data_col);
+    int n_sample = bottom.cols();  // Number of samples in the batch
+    top.resize(height_out * width_out * channel_out, n_sample);  // Resize the output matrix
+    data_cols.resize(n_sample);  // Resize the intermediate container for im2col results
 
-    data_cols[i] = data_col;
-    // conv by product
-    Matrix result = data_col * weight;  // result: (hw_out, channel_out)
-    result.rowwise() += bias.transpose();
-    top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
-  }
+    for (int i = 0; i < n_sample; i++) {
+        float* image_data = new float[bottom.rows()];  // Allocate temporary array for a single sample
+        Eigen::Map<Vector>(image_data, bottom.rows()) = bottom.col(i);  // Copy data into the array
+
+        float* data_col_data = new float[height_out * width_out * height_kernel * width_kernel * channel_in];  // Allocate array for im2col result
+
+        // Call the im2col_gpu function
+        im2col_gpu(image_data, data_col_data, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
+
+        // Now, you would typically convert data_col_data back into a Matrix format for further processing
+        // Placeholder for conversion - actual implementation will depend on your setup
+        Matrix data_col = Matrix::Zero(height_out * width_out, height_kernel * width_kernel * channel_in); // Adjust size as needed
+        std::copy(data_col_data, data_col_data + data_col.size(), data_col.data());  // Copy data back
+        data_cols[i] = data_col;
+
+        // Convolution by product (assuming weight is a class member and already defined)
+        Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+        result.rowwise() += bias.transpose();  // Adding bias (assuming bias is a class member)
+        top.col(i) = Eigen::Map<Vector>(result.data(), result.size());  // Store result
+
+        // Cleanup temporary arrays
+        delete[] image_data;
+        delete[] data_col_data;
+    }
+    // Consider synchronizing if you have asynchronous operations
 }
 
 // col2im, used for grad_bottom
