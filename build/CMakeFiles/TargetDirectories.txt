@@ -1,0 +1,6 @@
+/mnt/d/Users/OneDrive - VNU-HCMUS/Documents/Study/4Y1S/03.Parallel_programming/p/mini-dnn-cpp/build/CMakeFiles/demo.dir
+/mnt/d/Users/OneDrive - VNU-HCMUS/Documents/Study/4Y1S/03.Parallel_programming/p/mini-dnn-cpp/build/CMakeFiles/edit_cache.dir
+/mnt/d/Users/OneDrive - VNU-HCMUS/Documents/Study/4Y1S/03.Parallel_programming/p/mini-dnn-cpp/build/CMakeFiles/rebuild_cache.dir
+/mnt/d/Users/OneDrive - VNU-HCMUS/Documents/Study/4Y1S/03.Parallel_programming/p/mini-dnn-cpp/build/src/CMakeFiles/MiniDNNLib.dir
+/mnt/d/Users/OneDrive - VNU-HCMUS/Documents/Study/4Y1S/03.Parallel_programming/p/mini-dnn-cpp/build/src/CMakeFiles/edit_cache.dir
+/mnt/d/Users/OneDrive - VNU-HCMUS/Documents/Study/4Y1S/03.Parallel_programming/p/mini-dnn-cpp/build/src/CMakeFiles/rebuild_cache.dir
