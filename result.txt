@@ -134,3 +134,68 @@ Lenet-5 CUDA im2col kernel
 
 Lenet-5 CUDA im2col kernel + CUDA matrix multiplication
 
+0-th batch, loss: 2.30432 - forward time: 370.577
+50-th batch, loss: 2.303 - forward time: 389.79
+100-th batch, loss: 2.30416 - forward time: 498.04
+150-th batch, loss: 2.30422 - forward time: 351.574
+200-th batch, loss: 2.30241 - forward time: 356.126
+250-th batch, loss: 2.30282 - forward time: 445.967
+300-th batch, loss: 2.30159 - forward time: 357.001
+350-th batch, loss: 2.30196 - forward time: 349.987
+400-th batch, loss: 2.30231 - forward time: 465.256
+450-th batch, loss: 2.3005 - forward time: 348.701
+
+1-th epoch, test acc: 0.1084
+
+0-th batch, loss: 2.30074 - forward time: 389.974
+50-th batch, loss: 2.2977 - forward time: 483.245
+100-th batch, loss: 2.29248 - forward time: 356.65
+150-th batch, loss: 2.27361 - forward time: 359.625
+200-th batch, loss: 2.2916 - forward time: 350.386
+250-th batch, loss: 2.27625 - forward time: 352.621
+300-th batch, loss: 2.20583 - forward time: 354.907
+350-th batch, loss: 2.19896 - forward time: 484.917
+400-th batch, loss: 1.99091 - forward time: 362.555
+450-th batch, loss: 1.58433 - forward time: 364.825
+
+2-th epoch, test acc: 0.3448
+
+0-th batch, loss: 1.42282 - forward time: 392.304
+50-th batch, loss: 1.33529 - forward time: 358.773
+100-th batch, loss: 0.969224 - forward time: 364.446
+150-th batch, loss: 1.00481 - forward time: 515.792
+200-th batch, loss: 0.933824 - forward time: 365.457
+250-th batch, loss: 0.802652 - forward time: 364.456
+300-th batch, loss: 0.757904 - forward time: 367.56
+350-th batch, loss: 0.865406 - forward time: 356.937
+400-th batch, loss: 0.706626 - forward time: 503.905
+450-th batch, loss: 0.77381 - forward time: 362.634
+
+3-th epoch, test acc: 0.7117
+
+0-th batch, loss: 0.580624 - forward time: 541.878
+50-th batch, loss: 0.650482 - forward time: 360.854
+100-th batch, loss: 0.695757 - forward time: 369.75
+150-th batch, loss: 0.625717 - forward time: 507.783
+200-th batch, loss: 0.793502 - forward time: 374.562
+250-th batch, loss: 0.591373 - forward time: 364.533
+300-th batch, loss: 0.635395 - forward time: 448.109
+350-th batch, loss: 0.754828 - forward time: 361.415
+400-th batch, loss: 0.733514 - forward time: 368.321
+450-th batch, loss: 0.616435 - forward time: 362.255
+
+4-th epoch, test acc: 0.7373
+
+0-th batch, loss: 0.669542 - forward time: 399.623
+50-th batch, loss: 0.582117 - forward time: 380.752
+100-th batch, loss: 0.769639 - forward time: 358.179
+150-th batch, loss: 0.844464 - forward time: 496.15
+200-th batch, loss: 0.67774 - forward time: 374.828
+250-th batch, loss: 0.644672 - forward time: 361.407
+300-th batch, loss: 0.721177 - forward time: 363.797
+350-th batch, loss: 0.693981 - forward time: 368.353
+400-th batch, loss: 0.555203 - forward time: 372.2
+450-th batch, loss: 0.618422 - forward time: 363.006
+
+5-th epoch, test acc: 0.7548
+

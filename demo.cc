@@ -69,6 +69,9 @@ int main()
     // SGD opt(0.001);
     const int n_epoch = 5;
     const int batch_size = 128;
+
+    copyWeightsToConstant(C1->get_parameters().data(), C1->get_parameters().size());
+    copyWeightsToConstant(C3->get_parameters().data(), C3->get_parameters().size());
     for (int epoch = 0; epoch < n_epoch; epoch++)
     {
         shuffle_data(dataset.train_data, dataset.train_labels);
