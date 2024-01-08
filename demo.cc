@@ -85,13 +85,15 @@ int main()
                 std::cout << ith_batch << "-th grad: " << std::endl;
                 dnn.check_gradient(x_batch, target_batch, 10);
             }
+            startTimer();
             dnn.forward(x_batch);
+            float forward_time = stopTimer();
             dnn.backward(x_batch, target_batch);
             // display
             if (ith_batch % 50 == 0)
             {
                 std::cout << ith_batch << "-th batch, loss: " << dnn.get_loss()
-                          << std::endl;
+                          << " - forward time: " << forward_time <<std::endl;
             }
             // optimize
             dnn.update(opt);
