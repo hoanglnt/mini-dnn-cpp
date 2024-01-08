@@ -90,6 +90,18 @@ __global__ void im2col_kernel(float* image, float* data_col, int height_in, int 
     }
 }
 
+__global__ void matrix_multiplication_kernel(float* A, float* B, float* C, int m, int n, int k)
+{
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    if (row >= m || col >= k) return;
+    float t = 0;
+    for (int h = 0; h < n; h++)
+        t += A[row*n+h] * B[h*k+col];
+    C[row*k+col] = t;
+}
+
+
 
 void im2col_gpu(const float* image, float* data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
     // Allocate memory on device
@@ -116,3 +128,32 @@ void im2col_gpu(const float* image, float* data_col, int height_in, int width_in
     cudaFree(d_image);
     cudaFree(d_data_col);
 }
+
+void matrix_multiply_gpu(const float* A, const float* B, float* C, int m, int n, int k) {
+    // Allocate device memory
+    float *d_A, *d_B, *d_C;
+    cudaMalloc(&d_A, sizeof(float) * m * n);
+    cudaMalloc(&d_B, sizeof(float) * n * k);
+    cudaMalloc(&d_C, sizeof(float) * m * k);
+
+    // Copy host memory to device
+    cudaMemcpy(d_A, A, sizeof(float) * m * n, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, sizeof(float) * n * k, cudaMemcpyHostToDevice);
+
+    // Kernel launch parameters
+    dim3 threadsPerBlock(16, 16); // This can be tuned
+    dim3 numBlocks((k + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (m + threadsPerBlock.y - 1) / threadsPerBlock.y);
+
+    // Launch the matrix multiplication kernel
+    matrix_multiplication_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, m, n, k);
+
+    // Copy result back to host
+    cudaMemcpy(C, d_C, sizeof(float) * m * k, cudaMemcpyDeviceToHost);
+
+    // Cleanup
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+}
+

@@ -55,28 +55,31 @@ void Conv::forward(const Matrix& bottom) {
     top.resize(height_out * width_out * channel_out, n_sample);
     data_cols.resize(n_sample);
 
-    // Assuming all necessary dimensions and parameters are class members or otherwise accessible
     for (int i = 0; i < n_sample; i++) {
-        // Flatten the i-th column of 'bottom' to a raw pointer array
         float* image = new float[bottom.rows()]; // Assuming one column of 'bottom' is one image
         Eigen::Map<Vector>(image, bottom.rows()) = bottom.col(i);
 
-        // Prepare a buffer for the result of im2col
         float* data_col_buffer = new float[height_out * width_out * height_kernel * width_kernel * channel_in];
 
-        // Call the im2col_gpu function
+        // Assuming im2col_gpu is a function that transforms the input data for convolution
         im2col_gpu(image, data_col_buffer, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
 
-        // Convert the raw pointer data_col back to Matrix form and store it in data_cols
         Matrix data_col = Eigen::Map<Matrix>(data_col_buffer, height_out * width_out, height_kernel * width_kernel * channel_in);
         data_cols[i] = data_col;
 
-        // Perform the convolution as matrix multiplication
-        Matrix result = data_col * weight;  // Assuming 'weight' is defined and correct
+        Matrix result(height_out * width_out, channel_out);
+        matrix_multiply_gpu(
+            data_col_buffer,
+            weight.data(),
+            result.data(),
+            height_out * width_out,
+            height_kernel * width_kernel * channel_in,
+            channel_out
+        );
+
         result.rowwise() += bias.transpose();
         top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
 
-        // Clean up the dynamically allocated memory
         delete[] image;
         delete[] data_col_buffer;
     }
