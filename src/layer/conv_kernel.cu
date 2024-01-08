@@ -1,5 +1,6 @@
 #include <iostream>
 #include "conv_kernel.h"
+#define TILE_SIZE 16
 __constant__ float const_weights[2560];
 
 #define CHECK(call)\
@@ -91,19 +92,39 @@ __global__ void im2col_kernel(float* image, float* data_col, int height_in, int 
     }
 }
 
-
 __global__ void matrix_multiplication_kernel(float* A, float* C, int m, int n, int k) {
-    int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    __shared__ float As[TILE_SIZE][TILE_SIZE];
+    __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
-    if (row < m && col < k) {
-        float value = 0;
-        for (int h = 0; h < n; h++) {
-            value += A[row * n + h] * const_weights[h * k + col];  // Using weights from constant memory
-        }
-        C[row * k + col] = value;
+    int bx = blockIdx.x, by = blockIdx.y;
+    int tx = threadIdx.x, ty = threadIdx.y;
+    int row = by * TILE_SIZE + ty;
+    int col = bx * TILE_SIZE + tx;
+    float sum = 0;
+
+    for (int ph = 0; ph < ceil(n / (float)TILE_SIZE); ++ph) {
+        if (row < m && ph * TILE_SIZE + tx < n)
+            As[ty][tx] = A[row * n + ph * TILE_SIZE + tx];
+        else
+            As[ty][tx] = 0;
+
+        if (col < k && ph * TILE_SIZE + ty < n)
+            Bs[ty][tx] = const_weights[(ph * TILE_SIZE + ty) * k + col];
+        else
+            Bs[ty][tx] = 0;
+
+        __syncthreads();
+
+        for (int k = 0; k < TILE_SIZE; ++k)
+            sum += As[ty][k] * Bs[k][tx];
+
+        __syncthreads();
     }
+
+    if (row < m && col < k)
+        C[row * k + col] = sum;
 }
+
 
 void copyWeightsToConstant(float* host_weights, size_t num_weights) {
     cudaMemcpyToSymbol(const_weights, host_weights, sizeof(float) * num_weights);
@@ -145,7 +166,7 @@ void matrix_multiply_gpu(const float* A, float* C, int m, int n, int k) {
     cudaMemcpy(d_A, A, sizeof(float) * m * n, cudaMemcpyHostToDevice);
 
     // Kernel launch parameters
-    dim3 threadsPerBlock(16, 16); // This can be tuned
+    dim3 threadsPerBlock(TILE_SIZE, TILE_SIZE); // This can be tuned
     dim3 numBlocks((k + threadsPerBlock.x - 1) / threadsPerBlock.x,
                    (m + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
