@@ -142,7 +142,7 @@ void matrix_multiply_gpu(const float* A, float* C, int m, int n, int k) {
     cudaMalloc(&d_C, sizeof(float) * m * k);
 
     // Copy host memory to device for A
-    cudaMemcpy(d_A, A, sizeof(float) * m * n, cudaMemcpyHostToDevice);=
+    cudaMemcpy(d_A, A, sizeof(float) * m * n, cudaMemcpyHostToDevice);
 
     // Kernel launch parameters
     dim3 threadsPerBlock(16, 16); // This can be tuned
