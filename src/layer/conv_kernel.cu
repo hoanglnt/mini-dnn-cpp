@@ -1,17 +1,17 @@
 #include <iostream>
 #include "conv_kernel.h"
 
-#define CHECK(call)                                                \
-	{                                                              \
-		const cudaError_t error = call;                            \
-		if (error != cudaSuccess)                                  \
-		{                                                          \
-			fprintf(stderr, "Error: %s:%d, ", __FILE__, __LINE__); \
-			fprintf(stderr, "code: %d, reason: %s\n", error,       \
-					cudaGetErrorString(error));                    \
-			exit(EXIT_FAILURE);                                    \
-		}                                                          \
-	}
+#define CHECK(call)\
+{\
+	const cudaError_t error = call;\
+	if (error != cudaSuccess)\
+	{\
+		fprintf(stderr, "Error: %s:%d, ", __FILE__, __LINE__);\
+		fprintf(stderr, "code: %d, reason: %s\n", error,\
+				cudaGetErrorString(error));\
+		exit(EXIT_FAILURE);\
+	}\
+}
 
 struct GpuTimer
 {
@@ -63,58 +63,64 @@ float stopTimer()
 	return timer.Elapsed();
 }
 
-__global__ void unrollKernel_1(int C, int H, int W, int K, float* image, float* data_col)
-{
-	int c, s, h_out, w_out, h_unroll, w_unroll, w_base, p, q;
-	int t = blockIdx.x * blockDim.x + threadIdx.x;
-	int H_out = H - K + 1;
-	int W_out = W - K + 1;
-	int W_unroll = H_out * W_out;
+__global__ void im2col_kernel(const float* image, float* data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x; // Global thread index
+    if (index >= height_out * width_out * channel_in) return; // Check if within bounds
 
-	if (t < C * W_unroll)
-	{
-		c = t / W_unroll;
-		s = t % W_unroll;
-		h_out = s / W_out;
-		w_out = s % W_out;
-		h_unroll = h_out * W_out + w_out;
-		w_base = c * (K * K);
+    int w_out = index % width_out;
+    int h_out = (index / width_out) % height_out;
+    int c_in = index / (width_out * height_out);
 
-		for (p = 0; p < K; p++)
-		{
-			for (q = 0; q < K; q++)
-			{
-				w_unroll = w_base + p * K + q;
-				data_col[w_unroll * W_unroll + h_unroll] = image[c * H * W + (h_out + p) * W + (w_out + q)];
-			}
-		}
-	}
+    int h_offset = h_out * stride - pad_h;
+    int w_offset = w_out * stride - pad_w;
+
+    for (int i = 0; i < height_kernel; ++i) {
+        for (int j = 0; j < width_kernel; ++j) {
+            int im_row = h_offset + i;
+            int im_col = w_offset + j;
+            int col_index = (i * width_kernel + j) * channel_in + c_in;
+            if (im_row >= 0 && im_row < height_in && im_col >= 0 && im_col < width_in) {
+                data_col[index + col_index * height_out * width_out] = image[im_row * width_in + im_col + c_in * height_in * width_in];
+            } else {
+                data_col[index + col_index * height_out * width_out] = 0;
+            }
+        }
+    }
 }
 
-void unrollGPUWrapper(int C, int H, int W, int K, float* image, float* data_col)
-{
-	int H_out = H - K + 1;
-	int W_out = W - K + 1;
-	int W_unroll = H_out * W_out;
-	int num_threads = C * H_out * W_out;
-	int block_size = 1024;
-	int num_blocks = ceil((float)num_threads / block_size);
-	
-	// Copy image to device
-	float* d_image;
-	CHECK(cudaMalloc(&d_image, C * H * W * sizeof(float)));
-	CHECK(cudaMemcpy(d_image, image, C * H * W * sizeof(float), cudaMemcpyHostToDevice));
+void im2col_gpu(const Matrix& bottom, Matrix& data_col) {
+    // Extract dimensions and parameters from the bottom and data_col matrices
+    int height_in = ...; // Set the actual value
+    int width_in = ...; // Set the actual value
+    int channel_in = ...; // Set the actual value
+    int height_out = ...; // Calculate or set the actual value
+    int width_out = ...; // Calculate or set the actual value
+    int height_kernel = ...; // Set the actual value
+    int width_kernel = ...; // Set the actual value
+    int pad_h = ...; // Set the actual value
+    int pad_w = ...; // Set the actual value
+    int stride = ...; // Set the actual value
 
-	// Copy data_col to device
-	float* d_data_col;
-	CHECK(cudaMalloc(&d_data_col, C * K * K * W_unroll * sizeof(float)));
+    // Allocate memory on the GPU
+    float* d_image;
+    float* d_data_col;
+    cudaMalloc(&d_image, sizeof(float) * bottom.size()); // bottom.size() should be total elements in bottom
+    cudaMalloc(&d_data_col, sizeof(float) * data_col.size()); // data_col.size() should be total elements in data_col
 
-	unrollKernel_1<<<num_blocks, block_size>>>(C, H, W, K, d_image, d_data_col);
-	CHECK(cudaGetLastError());
+    // Copy data from CPU to GPU
+    cudaMemcpy(d_image, bottom.data(), sizeof(float) * bottom.size(), cudaMemcpyHostToDevice);
 
-	// Copy data_col back to host
-	CHECK(cudaMemcpy(data_col, d_data_col, C * K * K * W_unroll * sizeof(float), cudaMemcpyDeviceToHost));
-	// Free memory
-	CHECK(cudaFree(d_image));
-	CHECK(cudaFree(d_data_col));
+    // Calculate grid and block sizes
+    int numThreads = 256; // This can be tuned
+    int numBlocks = (height_out * width_out * channel_in + numThreads - 1) / numThreads;
+
+    // Launch kernel
+    im2col_kernel<<<numBlocks, numThreads>>>(d_image, d_data_col, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
+
+    // Copy result back to CPU
+    cudaMemcpy(data_col.data(), d_data_col, sizeof(float) * data_col.size(), cudaMemcpyDeviceToHost);
+
+    // Clean up
+    cudaFree(d_image);
+    cudaFree(d_data_col);
 }

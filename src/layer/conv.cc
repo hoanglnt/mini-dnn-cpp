@@ -54,12 +54,10 @@ void Conv::forward(const Matrix& bottom) {
   int n_sample = bottom.cols();
   top.resize(height_out * width_out * channel_out, n_sample);
   data_cols.resize(n_sample);
-  float* dataColData = (float *)malloc(height_kernel * width_kernel * channel_in * height_out * width_out * sizeof(float));
   for (int i = 0; i < n_sample; i ++) {
     // im2col
-    float* imageData = (float *)(bottom.col(i)).transpose().data();
-    unrollGPUWrapper(channel_in, height_in, width_in, height_kernel, imageData, dataColData);
-    Matrix data_col = Eigen::Map<Matrix>(dataColData, height_out * width_out, height_kernel * width_kernel * channel_in);
+    Matrix data_col; // Ensure data_col is initialized to correct size if needed
+    im2col_gpu(bottom.col(i), data_col);
 
     data_cols[i] = data_col;
     // conv by product
