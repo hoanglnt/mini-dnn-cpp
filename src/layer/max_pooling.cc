@@ -10,7 +10,7 @@ void MaxPooling::init() {
   dim_out = height_out * width_out * channel_out;
 }
 
-void MaxPooling::forward(const Matrix& bottom, int option = 0) {
+void MaxPooling::forward(const Matrix& bottom, int ) {
   int n_sample = bottom.cols();
   int hw_in = height_in * width_in;
   int hw_pool = height_pool * width_pool;

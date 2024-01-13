@@ -21,7 +21,7 @@ class FullyConnected : public Layer {
                  dim_in(dim_in), dim_out(dim_out)
   { init(); }
 
-  void forward(const Matrix& bottom, int option = 0);
+  void forward(const Matrix& bottom, int );
   void backward(const Matrix& bottom, const Matrix& grad_top);
   void update(Optimizer& opt);
   int output_dim() { return dim_out; }

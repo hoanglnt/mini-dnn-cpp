@@ -1,6 +1,6 @@
 #include "./relu.h"
 
-void ReLU::forward(const Matrix& bottom, int option = 0) {
+void ReLU::forward(const Matrix& bottom, int ) {
   // a = z*(z>0)
   top = bottom.cwiseMax(0.0);
 }
