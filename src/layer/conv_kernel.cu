@@ -144,7 +144,7 @@ void matrix_multiply_gpu2(const float* A, float* C, int m, int n, int k) {
                    (m + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // Launch the modified matrix multiplication kernel
-    matrix_multiplication_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_C, m, n, k);
+    matrix_multiplication_kernel2<<<numBlocks, threadsPerBlock>>>(d_A, d_C, m, n, k);
 
     // Copy result back to host
     cudaMemcpy(C, d_C, sizeof(float) * m * k, cudaMemcpyDeviceToHost);
@@ -236,7 +236,7 @@ void matrix_multiply_gpu1(const float* A, const float* B, float* C, int m, int n
                    (m + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // Launch the matrix multiplication kernel
-    matrix_multiplication_kernel<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, m, n, k);
+    matrix_multiplication_kernel1<<<numBlocks, threadsPerBlock>>>(d_A, d_B, d_C, m, n, k);
 
     // Copy result back to host
     cudaMemcpy(C, d_C, sizeof(float) * m * k, cudaMemcpyDeviceToHost);
