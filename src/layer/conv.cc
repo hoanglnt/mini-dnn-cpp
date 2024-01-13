@@ -50,37 +50,98 @@ void Conv::im2col(const Vector& image, Matrix& data_col) {
   }
 }
 
-void Conv::forward(const Matrix& bottom) {
+void Conv::forward(const Matrix& bottom, int option) {
     int n_sample = bottom.cols();
     top.resize(height_out * width_out * channel_out, n_sample);
     data_cols.resize(n_sample);
 
     for (int i = 0; i < n_sample; i++) {
-        float* image = new float[bottom.rows()]; // Assuming one column of 'bottom' is one image
-        Eigen::Map<Vector>(image, bottom.rows()) = bottom.col(i);
+        if (option == 1) {
+            // im2col
+            Matrix data_col;
+            im2col(bottom.col(i), data_col);
+            data_cols[i] = data_col;
+            // conv by product
+            Matrix result = data_col * weight;  // result: (hw_out, channel_out)
+            result.rowwise() += bias.transpose();
+            top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+        } else if (option == 2) {
+            // Flatten the i-th column of 'bottom' to a raw pointer array
+            float* image = new float[bottom.rows()]; // Assuming one column of 'bottom' is one image
+            Eigen::Map<Vector>(image, bottom.rows()) = bottom.col(i);
 
-        float* data_col_buffer = new float[height_out * width_out * height_kernel * width_kernel * channel_in];
+            // Prepare a buffer for the result of im2col
+            float* data_col_buffer = new float[height_out * width_out * height_kernel * width_kernel * channel_in];
 
-        // Assuming im2col_gpu is a function that transforms the input data for convolution
-        im2col_gpu(image, data_col_buffer, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
+            // Call the im2col_gpu function
+            im2col_gpu1(image, data_col_buffer, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
 
-        Matrix data_col = Eigen::Map<Matrix>(data_col_buffer, height_out * width_out, height_kernel * width_kernel * channel_in);
-        data_cols[i] = data_col;
+            // Convert the raw pointer data_col back to Matrix form and store it in data_cols
+            Matrix data_col = Eigen::Map<Matrix>(data_col_buffer, height_out * width_out, height_kernel * width_kernel * channel_in);
+            data_cols[i] = data_col;
 
-        Matrix result(height_out * width_out, channel_out);
-        matrix_multiply_gpu(
-            data_col_buffer,
-            result.data(),
-            height_out * width_out,
-            height_kernel * width_kernel * channel_in,
-            channel_out
-        );
+            // Perform the convolution as matrix multiplication
+            Matrix result = data_col * weight;  // Assuming 'weight' is defined and correct
+            result.rowwise() += bias.transpose();
+            top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
 
-        result.rowwise() += bias.transpose();
-        top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+            // Clean up the dynamically allocated memory
+            delete[] image;
+            delete[] data_col_buffer;
+        } else if (option == 3) {
+            float* image = new float[bottom.rows()]; // Assuming one column of 'bottom' is one image
+            Eigen::Map<Vector>(image, bottom.rows()) = bottom.col(i);
 
-        delete[] image;
-        delete[] data_col_buffer;
+            float* data_col_buffer = new float[height_out * width_out * height_kernel * width_kernel * channel_in];
+
+            // Assuming im2col_gpu is a function that transforms the input data for convolution
+            im2col_gpu1(image, data_col_buffer, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
+
+            Matrix data_col = Eigen::Map<Matrix>(data_col_buffer, height_out * width_out, height_kernel * width_kernel * channel_in);
+            data_cols[i] = data_col;
+
+            Matrix result(height_out * width_out, channel_out);
+            matrix_multiply_gpu1(
+                data_col_buffer,
+                weight.data(),
+                result.data(),
+                height_out * width_out,
+                height_kernel * width_kernel * channel_in,
+                channel_out
+            );
+
+            result.rowwise() += bias.transpose();
+            top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+
+            delete[] image;
+            delete[] data_col_buffer;
+        } else if (option == 4) {
+            float* image = new float[bottom.rows()]; // Assuming one column of 'bottom' is one image
+            Eigen::Map<Vector>(image, bottom.rows()) = bottom.col(i);
+
+            float* data_col_buffer = new float[height_out * width_out * height_kernel * width_kernel * channel_in];
+
+            // Assuming im2col_gpu is a function that transforms the input data for convolution
+            im2col_gpu2(image, data_col_buffer, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
+
+            Matrix data_col = Eigen::Map<Matrix>(data_col_buffer, height_out * width_out, height_kernel * width_kernel * channel_in);
+            data_cols[i] = data_col;
+
+            Matrix result(height_out * width_out, channel_out);
+            matrix_multiply_gpu2(
+                data_col_buffer,
+                result.data(),
+                height_out * width_out,
+                height_kernel * width_kernel * channel_in,
+                channel_out
+            );
+
+            result.rowwise() += bias.transpose();
+            top.col(i) = Eigen::Map<Vector>(result.data(), result.size());
+
+            delete[] image;
+            delete[] data_col_buffer;
+        }
     }
 }
 

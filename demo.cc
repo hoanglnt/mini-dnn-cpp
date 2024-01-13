@@ -34,6 +34,13 @@ int main()
     int dim_in = dataset.train_data.rows();
     std::cout << "mnist train number: " << n_train << std::endl;
     std::cout << "mnist test number: " << dataset.test_labels.cols() << std::endl;
+    std::cout << "Option: " << std::endl;
+    std::cout << "1. Default Lenet-5" << std::endl;
+    std::cout << "2. Lenet-5 with CUDA im2col kernel" << std::endl;
+    std::cout << "3. Lenet-5 with CUDA im2col kernel + CUDA matrix multiplication" << std::endl;
+    std::cout << "4. Lenet-5 with CUDA im2col kernel + CUDA matrix multiplication (SMEM + CMEM)" << std::endl;
+    int option;
+    std::cin >> option;
     // dnn
     Network dnn;
     Layer* C1 = new Conv(1, 28, 28, 6, 5, 5, 1);
@@ -72,8 +79,10 @@ int main()
 
     for (int epoch = 0; epoch < n_epoch; epoch++)
     {
-        copyWeightsToConstant(C1->get_parameters().data(), C1->get_parameters().size());
-        copyWeightsToConstant(C3->get_parameters().data(), C3->get_parameters().size());
+        if (option == 4) {
+            copyWeightsToConstant(C1->get_parameters().data(), C1->get_parameters().size());
+            copyWeightsToConstant(C3->get_parameters().data(), C3->get_parameters().size());
+        }
         shuffle_data(dataset.train_data, dataset.train_labels);
         for (int start_idx = 0; start_idx < n_train; start_idx += batch_size)
         {
@@ -89,7 +98,7 @@ int main()
                 dnn.check_gradient(x_batch, target_batch, 10);
             }
             startTimer();
-            dnn.forward(x_batch);
+            dnn.forward(x_batch, option);
             float forward_time = stopTimer();
             dnn.backward(x_batch, target_batch);
             // display
