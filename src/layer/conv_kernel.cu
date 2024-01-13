@@ -65,7 +65,7 @@ float stopTimer()
 	return timer.Elapsed();
 }   
 
-__global__ void matrix_multiplication_kernel(float* A, float* C, int m, int n, int k) {
+__global__ void matrix_multiplication_kernel2(float* A, float* C, int m, int n, int k) {
     __shared__ float As[TILE_SIZE][TILE_SIZE];
     __shared__ float Bs[TILE_SIZE][TILE_SIZE];
 
@@ -101,32 +101,6 @@ __global__ void matrix_multiplication_kernel(float* A, float* C, int m, int n, i
 
 void copyWeightsToConstant(float* host_weights, size_t num_weights) {
     cudaMemcpyToSymbol(const_weights, host_weights, sizeof(float) * num_weights);
-}
-
-void im2col_gpu(const float* image, float* data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
-    // Allocate memory on device
-    float *d_image, *d_data_col;
-    size_t image_size = sizeof(float) * height_in * width_in * channel_in;
-    size_t data_col_size = sizeof(float) * height_out * width_out * height_kernel * width_kernel * channel_in;
-    cudaMalloc(&d_image, image_size);
-    cudaMalloc(&d_data_col, data_col_size);
-
-    // Copy image to device
-    cudaMemcpy(d_image, image, image_size, cudaMemcpyHostToDevice);
-
-    // Calculate grid and block sizes
-    int threads = 256; // This can be tuned for your specific GPU
-    int blocks = (height_out * width_out + threads - 1) / threads;
-
-    // Launch kernel    
-    im2col_kernel<<<blocks, threads>>>(d_image, d_data_col, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
-
-    // Copy result back to host
-    cudaMemcpy(data_col, d_data_col, data_col_size, cudaMemcpyDeviceToHost);
-
-    // Clean up
-    cudaFree(d_image);
-    cudaFree(d_data_col);
 }
 
 void matrix_multiply_gpu2(const float* A, float* C, int m, int n, int k) {
