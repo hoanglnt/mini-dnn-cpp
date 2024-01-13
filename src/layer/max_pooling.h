@@ -32,7 +32,7 @@ class MaxPooling : public Layer {
              height_pool(height_pool), width_pool(width_pool), stride(stride)
   { init(); }
 
-  void forward(const Matrix& bottom);
+  void forward(const Matrix& bottom, int option = 0);
   void backward(const Matrix& bottom, const Matrix& grad_top);
   int output_dim() { return dim_out; }
 };

@@ -1,6 +1,6 @@
 #include "./sigmoid.h"
 
-void Sigmoid::forward(const Matrix& bottom) {
+void Sigmoid::forward(const Matrix& bottom, int option = 0) {
   // a = 1 / (1 + exp(-z))
   top.array() = 1.0 / (1.0 + (-bottom).array().exp());
 }

@@ -9,7 +9,7 @@ void FullyConnected::init() {
   set_normal_random(bias.data(), bias.size(), 0, 0.01);
 }
 
-void FullyConnected::forward(const Matrix& bottom) {
+void FullyConnected::forward(const Matrix& bottom, int option = 0) {
   // z = w' * x + b
   const int n_sample = bottom.cols();
   top.resize(dim_out, n_sample);

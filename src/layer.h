@@ -14,7 +14,7 @@ class Layer {
  public:
   virtual ~Layer() {}
 
-  virtual void forward(const Matrix& bottom) = 0;
+  virtual void forward(const Matrix& bottom, int option) = 0;
   virtual void backward(const Matrix& bottom, const Matrix& grad_top) = 0;
   virtual void update(Optimizer& opt) {}
   virtual const Matrix& output() { return top; }

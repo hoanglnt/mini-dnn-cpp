@@ -9,7 +9,7 @@ void AvePooling::init() {
   dim_out = height_out * width_out * channel_out;
 }
 
-void AvePooling::forward(const Matrix& bottom) {
+void AvePooling::forward(const Matrix& bottom, int option = 0) {
   int n_sample = bottom.cols();
   int hw_in = height_in * width_in;
   int hw_pool = height_pool * width_pool;
