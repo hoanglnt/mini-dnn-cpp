@@ -122,7 +122,7 @@ void Conv::forward(const Matrix& bottom, int option) {
             float* data_col_buffer = new float[height_out * width_out * height_kernel * width_kernel * channel_in];
 
             // Assuming im2col_gpu is a function that transforms the input data for convolution
-            im2col_gpu2(image, data_col_buffer, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
+            im2col_gpu1(image, data_col_buffer, height_in, width_in, channel_in, height_out, width_out, height_kernel, width_kernel, pad_h, pad_w, stride);
 
             Matrix data_col = Eigen::Map<Matrix>(data_col_buffer, height_out * width_out, height_kernel * width_kernel * channel_in);
             data_cols[i] = data_col;

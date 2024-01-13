@@ -65,34 +65,6 @@ float stopTimer()
 	return timer.Elapsed();
 }   
 
-__global__ void im2col_kernel(float* restrict image, float* restrict data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index >= height_out * width_out) return; // One thread per output element
-
-    int h_out = index / width_out; // Determine which output row and column this thread should handle
-    int w_out = index % width_out;
-
-    for (int c = 0; c < channel_in; c++) {
-        for (int i = 0; i < height_kernel; i++) {
-            #pragma unroll
-            for (int j = 0; j < width_kernel; j++) {
-                int im_row = h_out * stride - pad_h + i; // Calculate corresponding input row
-                int im_col = w_out * stride - pad_w + j; // Calculate corresponding input column
-
-                float val = 0; // Default to zero for padding
-                if (im_row >= 0 && im_row < height_in && im_col >= 0 && im_col < width_in) {
-                    val = image[im_row * width_in + im_col + c * height_in * width_in]; // Adjust for channel
-                }
-
-                // Calculate index in data_col
-                int data_col_idx = (c * height_kernel * width_kernel + i * width_kernel + j) * height_out * width_out + index;
-                data_col[data_col_idx] = val;
-            }
-        }
-    }
-}
-
-
 __global__ void matrix_multiplication_kernel(float* A, float* C, int m, int n, int k) {
     __shared__ float As[TILE_SIZE][TILE_SIZE];
     __shared__ float Bs[TILE_SIZE][TILE_SIZE];
@@ -233,33 +205,6 @@ void im2col_gpu1(const float* image, float* data_col, int height_in, int width_i
     // Clean up
     cudaFree(d_image);
     cudaFree(d_data_col);
-}
-
-__global__ void im2col_kernel2(float* restrict image, float* restrict data_col, int height_in, int width_in, int channel_in, int height_out, int width_out, int height_kernel, int width_kernel, int pad_h, int pad_w, int stride) {
-    int index = blockIdx.x * blockDim.x + threadIdx.x;
-    if (index >= height_out * width_out) return; // One thread per output element
-
-    int h_out = index / width_out; // Determine which output row and column this thread should handle
-    int w_out = index % width_out;
-
-    for (int c = 0; c < channel_in; c++) {
-        for (int i = 0; i < height_kernel; i++) {
-            #pragma unroll
-            for (int j = 0; j < width_kernel; j++) {
-                int im_row = h_out * stride - pad_h + i; // Calculate corresponding input row
-                int im_col = w_out * stride - pad_w + j; // Calculate corresponding input column
-
-                float val = 0; // Default to zero for padding
-                if (im_row >= 0 && im_row < height_in && im_col >= 0 && im_col < width_in) {
-                    val = image[im_row * width_in + im_col + c * height_in * width_in]; // Adjust for channel
-                }
-
-                // Calculate index in data_col
-                int data_col_idx = (c * height_kernel * width_kernel + i * width_kernel + j) * height_out * width_out + index;
-                data_col[data_col_idx] = val;
-            }
-        }
-    }
 }
 
 
