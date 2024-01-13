@@ -1,11 +1,11 @@
 #include "./network.h"
 
-void Network::forward(const Matrix& input) {
+void Network::forward(const Matrix& input, int option = 0) {
   if (layers.empty())
     return;
-  layers[0]->forward(input);
+  layers[0]->forward(input, 0);
   for (int i = 1; i < layers.size(); i++) {
-    layers[i]->forward(layers[i-1]->output());
+    layers[i]->forward(layers[i-1]->output(), 0);
   }
 }
 
